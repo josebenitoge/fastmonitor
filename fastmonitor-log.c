@@ -7,9 +7,9 @@
 #define COLOR_GREEN   "\x1b[32m"
 
 int main() {
-    FILE *file = fopen("logs.log", "r");
+    FILE *file = fopen("fastmonitor.log", "r");
     if (!file) {
-        perror("Error abriendo logs.log");
+        perror("'fastmonitor.log' not found");
         return 1;
     }
 

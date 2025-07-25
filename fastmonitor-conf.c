@@ -16,9 +16,9 @@ int is_valid_users_line(const char *line) {
 }
 
 int main() {
-    FILE *file = fopen("monitor.conf", "r");
+    FILE *file = fopen("fastmonitor.conf", "r");
     if (!file) {
-        printf(COLOR_RED "ERROR: No se pudo abrir el archivo 'monitor.conf'.\n" COLOR_RESET);
+        printf(COLOR_RED "ERROR: 'fastmonitor.conf' not found.\n" COLOR_RESET);
         return 1;
     }
 
@@ -37,7 +37,7 @@ int main() {
             if (*number && strspn(number, "0123456789") == strlen(number)) {
                 found_polling = 1;
             } else {
-                printf(COLOR_RED "ERROR: Valor no válido para polling.\n" COLOR_RESET);
+                printf(COLOR_RED "ERROR: Polling value not valid.\n" COLOR_RESET);
                 fclose(file);
                 return 1;
             }
@@ -51,22 +51,22 @@ int main() {
     fclose(file);
 
     if (!found_start) {
-        printf(COLOR_RED "ERROR: Falta la línea '#start' al inicio del archivo.\n" COLOR_RESET);
+        printf(COLOR_RED "ERROR: Missing '#start' line.\n" COLOR_RESET);
         return 1;
     }
     if (!found_polling) {
-        printf(COLOR_RED "ERROR: Línea 'polling:<numero>' no válida o ausente.\n" COLOR_RESET);
+        printf(COLOR_RED "ERROR: Line 'polling:<int>'.\n" COLOR_RESET);
         return 1;
     }
     if (!found_users) {
-        printf(COLOR_RED "ERROR: Línea 'users:[...]' no válida o ausente.\n" COLOR_RESET);
+        printf(COLOR_RED "ERROR: Line 'users:[...]'.\n" COLOR_RESET);
         return 1;
     }
     if (!found_end) {
-        printf(COLOR_RED "ERROR: Falta la línea '#end' al final del archivo.\n" COLOR_RESET);
+        printf(COLOR_RED "ERROR: Missing '#end' line.\n" COLOR_RESET);
         return 1;
     }
 
-    printf("Archivo de configuración válido ✅\n");
+    //printf("Archivo de configuración válido ✅\n");
     return 0;
 }
