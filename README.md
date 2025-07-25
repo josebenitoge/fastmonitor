@@ -33,6 +33,6 @@ El programa `monitor` soporta los siguientes comandos:
 
 #start
 polling:10
-users:[jb, root, admin]
+users:[user, root, admin]
 #end
 
