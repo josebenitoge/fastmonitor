@@ -1,0 +1,8 @@
+# Ignora todo por defecto
+*
+
+# ¡Pero no ignores los archivos .c!
+!*.c
+
+# Opcional: No ignores este archivo .gitignore (útil para mantenerlo versionado)
+!.gitignore
