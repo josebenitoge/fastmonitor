@@ -4,6 +4,7 @@
 #include <ctype.h>
 
 #define COLOR_RED   "\033[1;31m"
+#define COLOR_GREEN "\033[1;32m"
 #define COLOR_RESET "\033[0m"
 #define MAX_LINE    256
 
@@ -15,58 +16,95 @@ int is_valid_users_line(const char *line) {
     return starts_with(line, "users:[") && strchr(line, ']') != NULL;
 }
 
-int main() {
+void trim(char *str) {
+    char *end;
+    while (isspace((unsigned char)*str)) str++;
+    if (*str == 0) return;
+    end = str + strlen(str) - 1;
+    while (end > str && isspace((unsigned char)*end)) end--;
+    *(end + 1) = '\0';
+}
+
+int main(int argc, char *argv[]) {
     FILE *file = fopen("fastmonitor.conf", "r");
     if (!file) {
-        printf(COLOR_RED "ERROR: 'fastmonitor.conf' not found.\n" COLOR_RESET);
+        fprintf(stderr, COLOR_RED "ERROR: Configuration file 'fastmonitor.conf' not found.\n" COLOR_RESET);
         return 1;
     }
 
     char line[MAX_LINE];
-    int found_start = 0, found_polling = 0, found_users = 0, found_end = 0;
+    int valid_polling = 0, valid_users = 0;
+    int polling_value = -1;
+    char users_line[MAX_LINE] = {0};
 
     while (fgets(line, sizeof(line), file)) {
-        // Eliminar salto de línea
+        // Remove newline
         line[strcspn(line, "\n")] = 0;
+        trim(line);
 
-        if (strcmp(line, "#start") == 0) {
-            found_start = 1;
-        } else if (starts_with(line, "polling:")) {
+        if (starts_with(line, "polling:")) {
             char *number = line + strlen("polling:");
             while (isspace(*number)) number++;
             if (*number && strspn(number, "0123456789") == strlen(number)) {
-                found_polling = 1;
+                polling_value = atoi(number);
+                valid_polling = 1;
             } else {
-                printf(COLOR_RED "ERROR: Polling value not valid.\n" COLOR_RESET);
-                fclose(file);
-                return 1;
+                valid_polling = 0;
             }
         } else if (is_valid_users_line(line)) {
-            found_users = 1;
-        } else if (strcmp(line, "#end") == 0) {
-            found_end = 1;
+            strncpy(users_line, line, sizeof(users_line) - 1);
+            valid_users = 1;
         }
     }
 
     fclose(file);
 
-    if (!found_start) {
-        printf(COLOR_RED "ERROR: Missing '#start' line.\n" COLOR_RESET);
-        return 1;
-    }
-    if (!found_polling) {
-        printf(COLOR_RED "ERROR: Line 'polling:<int>'.\n" COLOR_RESET);
-        return 1;
-    }
-    if (!found_users) {
-        printf(COLOR_RED "ERROR: Line 'users:[...]'.\n" COLOR_RESET);
-        return 1;
-    }
-    if (!found_end) {
-        printf(COLOR_RED "ERROR: Missing '#end' line.\n" COLOR_RESET);
-        return 1;
+    if (argc > 1) {
+        printf("📘 FastMonitor Configuration Check\n");
+
+        if (valid_polling && valid_users) {
+            printf(COLOR_GREEN "✓ Configuration is valid.\n" COLOR_RESET);
+        } else {
+            printf(COLOR_RED "✗ Configuration is invalid.\n" COLOR_RESET);
+        }
+
+        if (valid_polling) {
+            printf("• Polling interval: %d seconds\n", polling_value);
+        } else {
+            printf(COLOR_RED "ERROR: Invalid or missing polling value.\n" COLOR_RESET);
+        }
+
+        if (valid_users) {
+            char *start = strchr(users_line, '[');
+            char *end = strchr(users_line, ']');
+            if (start && end && end > start) {
+                *end = '\0';
+                printf("• Authorized users:");
+                char *token = strtok(start + 1, ",");
+                while (token) {
+                    trim(token);
+                    printf(" %s", token);
+                    token = strtok(NULL, ",");
+                    if (token) printf(",");
+                }
+                printf("\n");
+            }
+        } else {
+            printf(COLOR_RED "ERROR: Invalid or missing users list.\n" COLOR_RESET);
+        }
+
+    } else {
+        // Silent mode: only report errors
+        if (!valid_polling) {
+            fprintf(stderr, COLOR_RED "ERROR: Invalid or missing polling value.\n" COLOR_RESET);
+            return 1;
+        }
+        if (!valid_users) {
+            fprintf(stderr, COLOR_RED "ERROR: Invalid or missing users list.\n" COLOR_RESET);
+            return 1;
+        }
+        // If valid, remain silent
     }
 
-    //printf("Archivo de configuración válido ✅\n");
     return 0;
 }
