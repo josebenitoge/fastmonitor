@@ -3,6 +3,7 @@
 
 # ¡Pero no ignores los archivos .c!
 !*.c
+!./commands
 
 # Opcional: No ignores este archivo .gitignore (útil para mantenerlo versionado)
 !.gitignore
