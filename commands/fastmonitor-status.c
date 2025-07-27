@@ -11,7 +11,7 @@ int check_monitor_process(char *out_pid, size_t pid_size, int verbose) {
     FILE *fp;
     char line[MAX_LINE];
 
-    fp = popen("pgrep -x fastmonitor-start", "r");
+    fp = popen("ps -eo pid,args | awk '$0 ~ /[f]astmonitor-start($| )/ { print $1 }'", "r");
     if (!fp) {
         if (verbose) printf("Status: Error checking process\n");
         return -1;
