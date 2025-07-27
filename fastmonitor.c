@@ -4,16 +4,13 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/wait.h>
 
 #define LOG_FILE "fastmonitor.log"
 
 int file_exists(const char *filename) {
     struct stat buffer;
     return (stat(filename, &buffer) == 0);
-}
-
-void print_usage() {
-    printf("Usage: fastmonitor [start | stop | status | log]\n");
 }
 
 void ensure_log_file_exists() {
@@ -25,6 +22,10 @@ void ensure_log_file_exists() {
             perror("Error: Unable to create 'fastmonitor.log'");
         }
     }
+}
+
+void print_usage() {
+    printf("Usage: fastmonitor [start | stop | status | log]\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -41,14 +42,25 @@ int main(int argc, char *argv[]) {
     }
 
     if (strcmp(argv[1], "start") == 0) {
-        // Ejecutar status sin argumentos y verificar el estado (0 = en ejecución)
         int status_code = system("./commands/fastmonitor-status > /dev/null");
-        if (WIFEXITED(status_code) && WEXITSTATUS(status_code) == 0) {
-            // Proceso en ejecución, detenerlo primero
-            system("./commands/fastmonitor-stop");
+
+        int code = 2;
+        if (WIFEXITED(status_code)) {
+            code = WEXITSTATUS(status_code);
         }
 
-        printf("Starting Fast Monitor...\n");
+        if (code == 2) {
+            fprintf(stderr, "Error: Configuration error. Cannot start Fast Monitor.\n");
+            return EXIT_FAILURE;
+        }
+
+        if (code == 0) {
+            printf("Fast Monitor is running. Restarting service...\n");
+            system("./commands/fastmonitor-stop");
+        } else if (code == 1) {
+            printf("Fast Monitor is not running. Starting service...\n");
+        }
+
         int result = system("sudo ./commands/fastmonitor-start &");
         if (result == -1) {
             perror("Error: Failed to start Fast Monitor");
@@ -63,7 +75,7 @@ int main(int argc, char *argv[]) {
         system("sudo ./commands/fastmonitor-stop");
 
     } else if (strcmp(argv[1], "status") == 0) {
-        system("./commands/fastmonitor-status show");
+        system("./commands/fastmonitor-status verbose");
 
     } else if (strcmp(argv[1], "log") == 0) {
         system("./commands/fastmonitor-log");
