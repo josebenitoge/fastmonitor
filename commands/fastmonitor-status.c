@@ -39,7 +39,7 @@ int run_monitor_conf(int verbose) {
     char line[MAX_LINE];
     int result = 0;
 
-    fp = popen("./fastmonitor-conf verbose", "r");
+    fp = popen("./commands/fastmonitor-conf verbose", "r");
     if (!fp) {
         if (verbose) fprintf(stderr, "Error: Unable to run fastmonitor-conf\n");
         return 2;
