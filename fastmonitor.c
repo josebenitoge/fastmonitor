@@ -14,62 +14,66 @@ int file_exists(const char *filename) {
 }
 
 void print_usage() {
-    printf("Uso: fastmonitor [start | stop | status | log]\n");
+    printf("Usage: fastmonitor [start | stop | status | log]\n");
 }
 
 void ensure_log_file_exists() {
     if (!file_exists(LOG_FILE)) {
         int fd = open(LOG_FILE, O_CREAT | O_WRONLY, 0644);
-        if (fd >= 0) close(fd);
-        else perror("Error: 'fastmonitor.log' not created");
+        if (fd >= 0) {
+            close(fd);
+        } else {
+            perror("Error: Unable to create 'fastmonitor.log'");
+        }
     }
 }
 
 int main(int argc, char *argv[]) {
-    //Verificar privilegios de root
+    // Ensure the program is executed with administrator privileges
     if (geteuid() != 0) {
-        fprintf(stderr, "Permission denied.\n");
-        return 1;
+        fprintf(stderr, "Error: Administrator privileges are required to execute Fast Monitor.\n");
+        return EXIT_FAILURE;
     }
 
-    // Asegurar que el log existe
+    // Ensure the log file exists
     ensure_log_file_exists();
 
     if (argc != 2) {
         print_usage();
-        return 1;
+        return EXIT_FAILURE;
     }
 
     if (strcmp(argv[1], "start") == 0) {
         if (file_exists(PID_FILE)) {
-            printf("Restarting...\n");
-            system("./fastmonitor-stop");
+            printf("Fast Monitor is already running. Restarting service...\n");
+            system("./commands/fastmonitor-stop");
         } else {
-            printf("Starting...\n");
+            printf("Starting Fast Monitor...\n");
         }
 
-        int result = system("sudo ./fastmonitor-start &");
+        int result = system("sudo ./commands/fastmonitor-start &");
         if (result == -1) {
-            perror("Error: Start error");
-            return 1;
+            perror("Error: Failed to start Fast Monitor");
+            return EXIT_FAILURE;
         } else {
-            printf("FastMonitor started\n");
-            return 0;
+            printf("Fast Monitor has been started successfully.\n");
+            return EXIT_SUCCESS;
         }
 
     } else if (strcmp(argv[1], "stop") == 0) {
-        system("sudo ./fastmonitor-stop");
+        printf("Stopping Fast Monitor...\n");
+        system("sudo ./commands/fastmonitor-stop");
 
     } else if (strcmp(argv[1], "status") == 0) {
-        system("./fastmonitor-status");
+        system("./commands/fastmonitor-status");
 
     } else if (strcmp(argv[1], "log") == 0) {
-        system("./fastmonitor-log");
+        system("./commands/fastmonitor-log");
 
     } else {
         print_usage();
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

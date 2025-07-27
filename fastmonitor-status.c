@@ -22,7 +22,7 @@ void check_monitor_process() {
         return;
     }
 
-    pid[strcspn(pid, "\n")] = 0; // Eliminar salto de línea
+    pid[strcspn(pid, "\n")] = 0;
     fclose(pid_file);
 
     char cmd[MAX_LINE];
