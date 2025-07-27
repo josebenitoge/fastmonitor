@@ -42,13 +42,6 @@ int main(void) {
         return EXIT_FAILURE;
     }
 
-    /* 2) Crear PID y log si no existen */
-    { FILE *f = fopen(PID_FILE, "w");
-      if (f) { fprintf(f, "%d\n", getpid()); fclose(f); } }
-    { int fd = open(LOG_FILE,
-                   O_CREAT|O_APPEND|O_WRONLY, 0644);
-      if (fd >= 0) close(fd); }
-
     /* 3) Bucle principal */
     while (1) {
         check_sessions();
